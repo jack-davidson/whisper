@@ -1,10 +1,14 @@
 package main
 
 import (
+	"crypto/sha512"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -19,23 +23,30 @@ func readDBPassword() string {
 
 const (
 	DBHost = "localhost"
-	DBPort = "5423"
+	DBPort = 5432
 	DBUser = "postgres"
 	DB     = "whisper"
 )
 
 var (
-	DBPasswd = readDBPassword()
+	DBPasswd         = readDBPassword()
+	DBDataSourceName = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", DBHost, DBPort, DBUser, DBPasswd, DB)
 )
 
 func NewUser(w http.ResponseWriter, r *http.Request) {
-	c := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=enable", "localhost", 5432, "postgres", DBPasswd, "whisper")
-	db, err := sql.Open("postgres", c)
+	db, err := sql.Open("postgres", DBDataSourceName)
 	if err != nil {
 		fmt.Println("Failed to connect to db")
 	}
 	defer db.Close()
-	w.WriteHeader(http.StatusCreated)
+
+	name := r.Header.Get("Name")
+	rand.Seed(time.Now().UnixNano())
+	authHashSeed := make([]byte, 64)
+	rand.Read(authHashSeed)
+	authHashBytes := sha512.Sum512(authHashSeed)
+	authHash := hex.EncodeToString(authHashBytes[:])
+	db.Exec(fmt.Sprintf("insert into users (name, authhash) values ('%s', '%s');", name, authHash))
 }
 
 func main() {
