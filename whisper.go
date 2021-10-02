@@ -145,13 +145,13 @@ func Messages(w http.ResponseWriter, r *http.Request) {
 Headers:
   	Name     - username of sender
 	Password - password of sender
-	For      - user id of recipient of message
+	For      - username of recipient of message
 */
 func Message(w http.ResponseWriter, r *http.Request) {
 	authenticate(r.Header.Get("Name"), r.Header.Get("Password"), func(db *sql.DB, id string) {
 		text := r.Header.Get("Text")
-		forUserID := r.Header.Get("For")
-		db.Exec("insert into messages (text, foruser, fromuser) values ($1, $2, $3);", text, forUserID, id)
+		forUser := r.Header.Get("For")
+		db.Exec("insert into messages (text, foruser, fromuser) values ($1, $2, $3);", text, lookupUserID(forUser), id)
 	})
 }
 
