@@ -2,10 +2,10 @@
 
 ## API documentation
 
-### `/deleteuser`: Given a username and a password, delete the user.
+### `/newuser` Given a username and password, create a new user.
     Headers:
-        Name     - username of user
-        Password - password of user
+        Name     - username for new user
+        Password - password for new user
 
     Example:
 
@@ -24,15 +24,15 @@
 
     Example:
 
-### `/newuser` Given a username and password, create a new user.
-    Headers:
-        Name     - username for new user
-        Password - password for new user
-
-    Example:
-
 ### `/user`: Given a username, lookup the user's id.
     Headers:
         Name - username of user
     
+    Example:
+
+### `/deleteuser`: Given a username and a password, delete the user.
+    Headers:
+        Name     - username of user
+        Password - password of user
+
     Example:
