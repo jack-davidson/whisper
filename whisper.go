@@ -82,6 +82,12 @@ func authenticate(name string, auth string, then func(db *sql.DB, id string)) {
 	}
 }
 
+/* `/newuser` Given a username and password, create a new user.
+
+Headers:
+  	Name     - username for new user
+	Password - password for new user
+*/
 func NewUser(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("postgres", DBDataSourceName)
 	if err != nil {
@@ -101,12 +107,24 @@ func NewUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/* `/deleteuser`: Given a username and a password, delete the user.
+
+Headers:
+  	Name     - username of user
+	Password - password of user
+*/
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	authenticate(r.Header.Get("Name"), r.Header.Get("Password"), func(db *sql.DB, id string) {
 		db.Exec("delete from users where id=$1;", id)
 	})
 }
 
+/* `/messages`: Given a username, get all of its messages (inbox).
+
+Headers:
+  	Name     - username of user
+	Password - password of user
+*/
 func Messages(w http.ResponseWriter, r *http.Request) {
 	authenticate(r.Header.Get("Name"), r.Header.Get("Password"), func(db *sql.DB, id string) {
 		q, err := db.Query("select * from messages where foruser=$1;", id)
@@ -122,6 +140,13 @@ func Messages(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+/* `/message`: Given a name, password, and recipient, send a message.
+
+Headers:
+  	Name     - username of sender
+	Password - password of sender
+	For      - recipient of message
+*/
 func Message(w http.ResponseWriter, r *http.Request) {
 	authenticate(r.Header.Get("Name"), r.Header.Get("Password"), func(db *sql.DB, id string) {
 		text := r.Header.Get("Text")
@@ -130,6 +155,11 @@ func Message(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+/* `/user`: Given a username, lookup the user's id.
+
+Headers:
+  	Name - username of user
+*/
 func User(w http.ResponseWriter, r *http.Request) {
 	id := lookupUserID(r.Header.Get("Name"))
 	if id != nil {
