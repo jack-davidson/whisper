@@ -33,11 +33,16 @@ var (
 	DBDataSourceName = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", DBHost, DBPort, DBUser, DBPasswd, DB)
 )
 
-func genAuth() string {
+func genHash() string {
 	auth := make([]byte, 64)
 	rand.Seed(time.Now().UnixNano())
 	rand.Read(auth)
 	return hex.EncodeToString(auth)
+}
+
+func hash(s string) string {
+	authHash := sha512.Sum512([]byte(s))
+	return hex.EncodeToString(authHash[:])
 }
 
 func NewUser(w http.ResponseWriter, r *http.Request) {
@@ -48,10 +53,9 @@ func NewUser(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	name := r.Header.Get("Name")
-	auth := genAuth()
+	auth := genHash()
 	fmt.Fprintln(w, auth)
-	authHash := sha512.Sum512([]byte(auth))
-	db.Exec("insert into users (name, authhash) values ($1, $2);", name, hex.EncodeToString(authHash[:]))
+	db.Exec("insert into users (name, authhash) values ($1, $2);", name, hash(auth))
 }
 
 func Me(w http.ResponseWriter, r *http.Request) {
@@ -63,16 +67,17 @@ func Me(w http.ResponseWriter, r *http.Request) {
 
 	name := r.Header.Get("Name")
 	auth := r.Header.Get("Auth")
-	authHash := sha512.Sum512([]byte(auth))
-	q, err := db.Query("select * from users where name=$1 and authhash=$2;", name, hex.EncodeToString(authHash[:]))
+
+	q, err := db.Query("select * from users where name=$1 and authhash=$2;", name, hash(auth))
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
+
 	if q.Next() {
-		fmt.Fprintf(w, "Auth Success\n")
+		fmt.Fprintf(w, "success\n")
 	} else {
-		fmt.Fprintf(w, "Failed to Authenticate as: %s, with Auth: %s\n", name, auth)
+		fmt.Fprintf(w, "failed\n")
 	}
 }
 
