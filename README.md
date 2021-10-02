@@ -7,7 +7,7 @@
         Name     - username for new user
         Password - password for new user
 
-    Example:
+    Example: curl -H 'Name: MyUserName' -H 'Password: Password123' http://localhost:3000/newuser
 
 ### `/message`: Given a name, password, and recipient, send a message.
     Headers:
@@ -15,24 +15,24 @@
         Password - password of sender
         For      - username of recipient of message
 
-    Example:
+    Example: curl -H 'Name: MyUserName' -H 'Password: Password123' -H 'For: AnotherUserName' http://localhost:3000/message
 
 ### `/messages`: Given a username, get all of its messages (inbox).
     Headers:
         Name     - username of user
         Password - password of user
 
-    Example:
+    Example: curl -H 'Name: MyUserName' -H 'Password: Password123' http://localhost:3000/messages
 
 ### `/user`: Given a username, lookup the user's id.
     Headers:
         Name - username of user
     
-    Example:
+    Example: curl -H 'Name: MyUserName' http://localhost:3000/user
 
 ### `/deleteuser`: Given a username and a password, delete the user.
     Headers:
         Name     - username of user
         Password - password of user
 
-    Example:
+    Example: curl -H 'Name: MyUserName' -H 'Password: Password123' http://localhost:3000/deleteuser
