@@ -145,7 +145,7 @@ func Messages(w http.ResponseWriter, r *http.Request) {
 Headers:
   	Name     - username of sender
 	Password - password of sender
-	For      - recipient of message
+	For      - user id of recipient of message
 */
 func Message(w http.ResponseWriter, r *http.Request) {
 	authenticate(r.Header.Get("Name"), r.Header.Get("Password"), func(db *sql.DB, id string) {
