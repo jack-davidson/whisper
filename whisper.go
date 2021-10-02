@@ -45,7 +45,7 @@ func hash(s string) string {
 	return hex.EncodeToString(authHash[:])
 }
 
-func authenticate(name string, auth string, then func(id string)) {
+func authenticate(name string, auth string, then func(db *sql.DB, id string)) {
 	db, err := sql.Open("postgres", DBDataSourceName)
 	if err != nil {
 		fmt.Println("Failed to connect to db")
@@ -59,7 +59,7 @@ func authenticate(name string, auth string, then func(id string)) {
 	if q.Next() {
 		var id string
 		q.Scan(&id)
-		then(id)
+		then(db, id)
 	}
 }
 
@@ -77,13 +77,7 @@ func NewUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func Messages(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("postgres", DBDataSourceName)
-	if err != nil {
-		fmt.Println("Failed to connect to db")
-	}
-	defer db.Close()
-
-	authenticate(r.Header.Get("Name"), r.Header.Get("Auth"), func(id string) {
+	authenticate(r.Header.Get("Name"), r.Header.Get("Auth"), func(db *sql.DB, id string) {
 		q, err := db.Query("select * from messages where foruser=$1;", id)
 		if err != nil {
 			fmt.Println(err.Error())
@@ -98,13 +92,7 @@ func Messages(w http.ResponseWriter, r *http.Request) {
 }
 
 func Message(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("postgres", DBDataSourceName)
-	if err != nil {
-		fmt.Println("Failed to connect to db")
-	}
-	defer db.Close()
-
-	authenticate(r.Header.Get("Name"), r.Header.Get("Auth"), func(id string) {
+	authenticate(r.Header.Get("Name"), r.Header.Get("Auth"), func(db *sql.DB, id string) {
 		text := r.Header.Get("Text")
 		db.Exec("insert into messages (text, foruser, fromuser) values ($1, $2, $3);", text, id, id)
 	})
