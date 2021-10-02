@@ -71,9 +71,20 @@ func NewUser(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	name := r.Header.Get("Name")
-	auth := genHash()
-	fmt.Fprintln(w, auth)
-	db.Exec("insert into users (name, authhash) values ($1, $2);", name, hash(auth))
+	q, err := db.Query("select * from users where name=$1;", name)
+	if !q.Next() {
+		auth := genHash()
+		db.Exec("insert into users (name, authhash) values ($1, $2);", name, hash(auth))
+		fmt.Fprintln(w, auth)
+	} else {
+		w.WriteHeader(http.StatusConflict)
+	}
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	authenticate(r.Header.Get("Name"), r.Header.Get("Auth"), func(db *sql.DB, id string) {
+		db.Exec("delete from users where id=$1;", id)
+	})
 }
 
 func Messages(w http.ResponseWriter, r *http.Request) {
@@ -101,6 +112,7 @@ func Message(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 	http.HandleFunc("/newuser", NewUser)
+	http.HandleFunc("/deleteuser", DeleteUser)
 	http.HandleFunc("/messages", Messages)
 	http.HandleFunc("/message", Message)
 	http.ListenAndServe(":3000", nil)
