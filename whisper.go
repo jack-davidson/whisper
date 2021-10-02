@@ -51,7 +51,7 @@ func NewUser(w http.ResponseWriter, r *http.Request) {
 	auth := genAuth()
 	fmt.Fprintln(w, auth)
 	authHash := sha512.Sum512([]byte(auth))
-	db.Exec(fmt.Sprintf("insert into users (name, authhash) values ('%s', '%s');", name, hex.EncodeToString(authHash[:])))
+	db.Exec("insert into users (name, authhash) values ($1, $2);", name, hex.EncodeToString(authHash[:]))
 }
 
 func Me(w http.ResponseWriter, r *http.Request) {
@@ -64,9 +64,10 @@ func Me(w http.ResponseWriter, r *http.Request) {
 	name := r.Header.Get("Name")
 	auth := r.Header.Get("Auth")
 	authHash := sha512.Sum512([]byte(auth))
-	q, err := db.Query(fmt.Sprintf("select * from users where name='%s' and authhash='%s';", name, hex.EncodeToString(authHash[:])))
+	q, err := db.Query("select * from users where name=$1 and authhash=$2;", name, hex.EncodeToString(authHash[:]))
 	if err != nil {
-		fmt.Println("Query failed")
+		fmt.Println(err.Error())
+		return
 	}
 	if q.Next() {
 		fmt.Fprintf(w, "Auth Success\n")
