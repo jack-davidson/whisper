@@ -11,6 +11,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 func readDBPassword() string {
@@ -168,11 +169,17 @@ func User(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
-	http.HandleFunc("/newuser", NewUser)
-	http.HandleFunc("/deleteuser", DeleteUser)
-	http.HandleFunc("/messages", Messages)
-	http.HandleFunc("/message", Message)
-	http.HandleFunc("/user", User)
-	http.ListenAndServe(":3000", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
+	mux.HandleFunc("/newuser", NewUser)
+	mux.HandleFunc("/deleteuser", DeleteUser)
+	mux.HandleFunc("/messages", Messages)
+	mux.HandleFunc("/message", Message)
+	mux.HandleFunc("/user", User)
+	handler := cors.New(cors.Options{
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"*"},
+		// Enable Debugging for testing, consider disabling in production
+		Debug: true}).Handler(mux)
+	http.ListenAndServe(":3000", handler)
 }
