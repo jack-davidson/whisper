@@ -1,5 +1,11 @@
 # Whisper
 
+## Database Documentation
+Whisper uses postgresql for the database.
+
+### Schema
+**TODO**: document database schema
+
 ## API documentation
 
 ### `/newuser` Given a username and password, create a new user.
